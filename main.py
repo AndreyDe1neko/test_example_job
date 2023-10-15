@@ -10,6 +10,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 from db import engine, Sessionlocal
 from models import *
+from sqlalchemy import exc
 
 app = FastAPI()
 
@@ -62,8 +63,46 @@ async def process_csv_row(row, db):
         raise HTTPException(status_code=400, detail="Invalid month format")
 
 
+@app.post("/payments_insert")
+async def payments_insert(file: UploadFile, db: Session = Depends(get_db)):
+    try:
+        file_content = await file.read()
+
+        decoded_content = file_content.decode("utf-8").splitlines()
+
+        all_decoded_content = csv.DictReader(decoded_content, delimiter='\t')
+
+        next(all_decoded_content)
+
+        for row in all_decoded_content:
+            id_payment = int(row.get('id'))
+            credit_id = int(row.get('credit_id'))
+            payment_date = None
+            type_id = row.get('type_id')
+            sum = row.get('sum')
+            if row.get('payment_date'):
+                payment_date = datetime.strptime(row.get('payment_date'), "%d.%m.%Y").date()
+                new_payment_elem = Payments(
+                    id=id_payment,
+                    credit_id=credit_id,
+                    payment_date=payment_date,
+                    type_id=type_id,
+                    sum=sum
+                )
+                db.add(new_payment_elem)
+        db.commit()
+    except exc.IntegrityError as e:
+        print(db.query(Payments.credit_id).filter(Payments.id == id_payment).first())
+        print(e)
+    except Exception as e:
+        print(type(e))
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+    # finally:
+    #     db.commit()
+
+
 @app.post("/credits_insert")
-async def credit_insert(file: UploadFile, request: Request, db: Session = Depends(get_db)):
+async def credit_insert(file: UploadFile, db: Session = Depends(get_db)):
     try:
         file_content = await file.read()
 
@@ -99,7 +138,7 @@ async def credit_insert(file: UploadFile, request: Request, db: Session = Depend
 
 
 @app.post("/plans_insert")
-async def plans_insert(file: UploadFile, request: Request, db: Session = Depends(get_db)):
+async def plans_insert(file: UploadFile, db: Session = Depends(get_db)):
     try:
         file_content = await file.read()
 
@@ -163,7 +202,7 @@ async def plans_performance(date, db: Session = Depends(get_db)):
             date_obj = datetime.strptime(date, "%Y-%m-%d")
 
             return {
-                'month': date_obj.strftime("%B"), # or if you need number date_obj.strftime("%m")
+                'month': date_obj.strftime("%B"),  # or if you need number date_obj.strftime("%m")
                 'category_id': 3,  # Припускаємо, що category_id 3 відповідає "Видача"
                 'sum_plan': sum_category_3,
                 'total_issued_credits': sum_category_4,

@@ -7,7 +7,7 @@
     <title>Upload CSV File</title>
 </head>
 <body style="background-color: #121212; color:  white;">
-    <h1>Upload CSV File</h1>
+    <h1>Upload CSV Files</h1>
     <form action="http://127.0.0.1:8000/plans_insert" method="post" enctype="multipart/form-data">
         <h3>For plans.csv</h3>
         <input type="file" name="file">
@@ -18,11 +18,11 @@
         <input type="file" name="file">
         <input type="submit" value="Upload">
     </form>
-<!--    <form action="http://127.0.0.1:8000/plans_insert" method="post" enctype="multipart/form-data">-->
-<!--        <h3>For plans.csv</h3>-->
-<!--        <input type="file" name="file">-->
-<!--        <input type="submit" value="Upload">-->
-<!--    </form>-->
+    <form action="http://127.0.0.1:8000/payments_insert" method="post" enctype="multipart/form-data">
+        <h3>For payments.csv</h3>
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+    </form>
 <!--    <form action="http://127.0.0.1:8000/plans_insert" method="post" enctype="multipart/form-data">-->
 <!--        <h3>For plans.csv</h3>-->
 <!--        <input type="file" name="file">-->
